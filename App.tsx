@@ -8,110 +8,103 @@
  * @format
  */
 
-import React from 'react';
+import React, { Component } from 'react';
+
 import {
   SafeAreaView,
-  StyleSheet,
-  ScrollView,
+  StatusBar,
+  Alert,
+  FlatList,
   View,
   Text,
-  StatusBar,
+  ListRenderItemInfo,
+  Image,
 } from 'react-native';
 
-import {
-  Header,
-  LearnMoreLinks,
-  Colors,
-  DebugInstructions,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
+interface ComponentsResponse {
+  components: any[];
+  extraData: any;
+}
 
-const App = () => {
-  const usingHermes = typeof HermesInternal === 'object' && HermesInternal !== null;
-  return (
-    <>
-      <StatusBar barStyle="dark-content" />
-      <SafeAreaView>
-        <ScrollView
-          contentInsetAdjustmentBehavior="automatic"
-          style={styles.scrollView}>
-          <Header />
-          {!usingHermes ? null : (
-            <View style={styles.engine}>
-              <Text style={styles.footer}>Engine: Hermes</Text>
-            </View>
-          )}
-          <View style={styles.body}>
-            <View style={styles.sectionContainer}>
-              <Text style={styles.sectionTitle}>Step One</Text>
-              <Text style={styles.sectionDescription}>
-                Edit <Text style={styles.highlight}>App.tsx</Text> to change this
-                screen and then come back to see your edits.
-              </Text>
-            </View>
-            <View style={styles.sectionContainer}>
-              <Text style={styles.sectionTitle}>See Your Changes</Text>
-              <Text style={styles.sectionDescription}>
-                <ReloadInstructions />
-              </Text>
-            </View>
-            <View style={styles.sectionContainer}>
-              <Text style={styles.sectionTitle}>Debug</Text>
-              <Text style={styles.sectionDescription}>
-                <DebugInstructions />
-              </Text>
-            </View>
-            <View style={styles.sectionContainer}>
-              <Text style={styles.sectionTitle}>Learn More</Text>
-              <Text style={styles.sectionDescription}>
-                Read the docs to discover what to do next:
-              </Text>
-            </View>
-            <LearnMoreLinks />
-          </View>
-        </ScrollView>
-      </SafeAreaView>
-    </>
-  );
+type Props = { [key: string]: any };
+
+type State = ComponentsResponse & {};
+
+class App extends Component<Props, State> {
+
+  private BASE_URL = 'http://localhost:3000';
+  private API_PATH = 'v1/posts';
+
+  public state = {
+    components: [],
+    extraData: {},
+  };
+
+  constructor(props: Props) {
+    super(props);
+
+    this._keyExtractor = this._keyExtractor.bind(this);
+    this._renderComponent = this._renderComponent.bind(this);
+    this._renderSectionData = this._renderSectionData.bind(this);
+  }
+
+  public componentDidMount() {
+    fetch(`${this.BASE_URL}/${this.API_PATH}`)
+      .then(async res => this._parseData(await res.json()))
+      .catch(err => Alert.alert(err));
+  }
+
+  private _parseData(data: ComponentsResponse) {
+    this.setState(data);
+  }
+
+  private _keyExtractor({ id, value }: any, index: number) {
+    return value?.componentId || id || `${Math.round(Math.random() * 100)}-${index}`;
+  }
+
+  private _renderSectionData({ item }: ListRenderItemInfo<any>) {
+    return (
+      <View style={{ padding: 15 }}>
+        <Text>{'Title: ' + item.title}</Text>
+        <Text>{'Subtitle: ' + item.subtitle}</Text>
+        <Text>{'Footer: ' + item.footer}</Text>
+
+        <Image source={{ uri: item.image, width: 150, height: 150 }}></Image>
+      </View>
+    )
+  }
+
+  private _renderComponent({ item }: ListRenderItemInfo<any>) {
+    const { type, value } = item;
+
+    if (type === 'GENERIC') {
+      return (
+        <FlatList
+          data={value.data}
+          renderItem={this._renderSectionData}
+          keyExtractor={this._keyExtractor}
+        />
+      )
+    }
+
+    const separators: any = null;
+    return this._renderSectionData({ item: value.data, index: 0, separators });
+  }
+
+  public render() {
+    return (
+      <>
+        <StatusBar barStyle="dark-content" />
+        <SafeAreaView>
+          <FlatList
+            data={this.state.components}
+            renderItem={this._renderComponent}
+            keyExtractor={this._keyExtractor}
+          />
+        </SafeAreaView>
+      </>
+    );
+  }
 };
-
-const styles = StyleSheet.create({
-  scrollView: {
-    backgroundColor: Colors.lighter,
-  },
-  engine: {
-    position: 'absolute',
-    right: 0,
-  },
-  body: {
-    backgroundColor: Colors.white,
-  },
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
-  },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
-    color: Colors.black,
-  },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
-    color: Colors.dark,
-  },
-  highlight: {
-    fontWeight: '700',
-  },
-  footer: {
-    color: Colors.dark,
-    fontSize: 12,
-    fontWeight: '600',
-    padding: 4,
-    paddingRight: 12,
-    textAlign: 'right',
-  },
-});
 
 export default App;
