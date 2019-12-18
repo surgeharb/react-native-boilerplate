@@ -1,5 +1,6 @@
 import React from 'react';
-import { FlatList, View, Text, Image, ListRenderItemInfo } from "react-native";
+import { Touchable } from '../common';
+import { FlatList, View, Text, Image, ListRenderItemInfo, Alert } from "react-native";
 
 export class RendererWorker {
 
@@ -22,7 +23,9 @@ export class RendererWorker {
         <Text>{'Subtitle: ' + item.subtitle}</Text>
         <Text>{'Footer: ' + item.footer}</Text>
 
-        <Image source={{ uri: item.image, width: 150, height: 150 }}></Image>
+        <Touchable onPress={() => Alert.alert('Yo')}>
+          <Image source={{ uri: item.image, width: 150, height: 150 }}></Image>
+        </Touchable>
       </View>
     )
   }
